@@ -11,6 +11,7 @@ function currentMonth() {
 
 export default function Home({ session }) {
   const [month, setMonth] = useState(currentMonth())
+  const [formOpen, setFormOpen] = useState(false)
   const { items, loading, addItem, toggleItem, deleteItem, copyFromMonth } = useItems(month)
 
   const checked = items.filter((i) => i.checked).length
@@ -48,10 +49,6 @@ export default function Home({ session }) {
         </div>
       )}
 
-      <ItemForm onAdd={addItem} />
-
-      <div className="divider" />
-
       {loading ? (
         <div className="loading-dots">
           <span /><span /><span />
@@ -59,6 +56,15 @@ export default function Home({ session }) {
       ) : (
         <ItemList items={items} onToggle={toggleItem} onDelete={deleteItem} />
       )}
+
+      <button className="fab" onClick={() => setFormOpen(true)} aria-label="Adicionar item">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
+
+      <ItemForm open={formOpen} onClose={() => setFormOpen(false)} onAdd={addItem} />
     </div>
   )
 }

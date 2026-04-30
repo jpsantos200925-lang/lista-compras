@@ -609,11 +609,12 @@ body::after {
   color: var(--text-3);
   font-size: 16px;
   cursor: pointer;
-  transition: all var(--transition);
   opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition), background var(--transition), color var(--transition);
 }
 
-.item-row:hover .btn-delete { opacity: 1; }
+.item-row:hover .btn-delete { opacity: 1; pointer-events: auto; }
 
 .btn-delete:hover {
   background: rgba(160,69,53,.15);
@@ -664,4 +665,183 @@ body::after {
   height: 1px;
   background: var(--border);
   margin: 8px 0 20px;
+}
+
+/* ─── FAB ────────────────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(46,107,78,.32), 0 2px 6px rgba(0,0,0,.08);
+  transition: transform var(--transition), box-shadow var(--transition);
+  z-index: 50;
+  animation: fadeUp .4s ease .2s both;
+}
+
+.fab:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(46,107,78,.4), 0 2px 6px rgba(0,0,0,.08); }
+.fab:active { transform: scale(.95); }
+
+/* ─── Bottom Sheet ───────────────────────────────────────────────── */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,24,20,.45);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn .2s ease;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 22px max(28px, env(safe-area-inset-bottom));
+  animation: sheetUp .3s cubic-bezier(.25,.8,.25,1) both;
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  margin: 0 auto 14px;
+}
+
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-1);
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet-form .item-form-input {
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-ghost {
+  flex: 0 0 auto;
+  padding: 13px 22px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-ghost:hover { background: var(--surface-2); color: var(--text-1); }
+
+.sheet-submit { flex: 1; margin-top: 0; }
+
+/* ─── Swipe-to-delete ────────────────────────────────────────────── */
+.item-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+.item-swipe-wrap.is-removing {
+  animation: slideOut .25s ease forwards;
+}
+
+.item-swipe-wrap .item-row {
+  animation: fadeUp .3s ease both;
+  position: relative;
+  z-index: 2;
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+.item-swipe-wrap .item-row.is-dragging {
+  transition: none !important;
+}
+
+.item-swipe-wrap .item-row:not(.is-dragging) {
+  transition: transform .25s cubic-bezier(.25,.8,.25,1), background var(--transition), border-color var(--transition), opacity var(--transition);
+}
+
+.item-swipe-action {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.item-swipe-wrap.is-swiped .item-swipe-action {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* hide static delete button on touch (swipe replaces it) */
+@media (hover: none) {
+  .btn-delete { display: none; }
+}
+
+/* ─── Empty state extra ──────────────────────────────────────────── */
+.empty-state-hint {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-3);
+  letter-spacing: .04em;
+}
+
+/* ─── Mobile tweaks ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .app { padding: 0 14px 100px; }
+  .month-name { font-size: 2rem; }
+  .item-row { padding: 14px 14px; }
+  .item-name { font-size: 15px; }
+  /* prevent iOS zoom on focus */
+  .field input,
+  .item-form-input { font-size: 16px; }
 }

@@ -8,33 +8,48 @@ export function useItems(month) {
   useEffect(() => {
     if (!month) return
 
-    // Busca inicial
-    fetchItems()
+    let channel
+    let cancelled = false
 
-    // Inscrição em tempo real — atualiza estado diretamente sem refetch
-    const channel = supabase
-      .channel(`items:${month}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'items', filter: `month=eq.${month}` },
-        ({ new: item }) => setItems((prev) => {
-          if (prev.find((i) => i.id === item.id)) return prev
-          return [...prev, item]
+    ;(async () => {
+      await fetchItems()
+      if (cancelled) return
+
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      if (token) supabase.realtime.setAuth(token)
+
+      channel = supabase
+        .channel(`items:${month}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'items', filter: `month=eq.${month}` },
+          ({ new: item }) => setItems((prev) => {
+            if (prev.find((i) => i.id === item.id)) return prev
+            return [...prev, item]
+          })
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'items', filter: `month=eq.${month}` },
+          ({ new: item }) => setItems((prev) => prev.map((i) => i.id === item.id ? item : i))
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'items', filter: `month=eq.${month}` },
+          ({ old: item }) => setItems((prev) => prev.filter((i) => i.id !== item.id))
+        )
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('[useItems] realtime status', status, err)
+          }
         })
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'items', filter: `month=eq.${month}` },
-        ({ new: item }) => setItems((prev) => prev.map((i) => i.id === item.id ? item : i))
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'items', filter: `month=eq.${month}` },
-        ({ old: item }) => setItems((prev) => prev.filter((i) => i.id !== item.id))
-      )
-      .subscribe()
+    })()
 
-    return () => supabase.removeChannel(channel)
+    return () => {
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [month])
 
   async function fetchItems() {

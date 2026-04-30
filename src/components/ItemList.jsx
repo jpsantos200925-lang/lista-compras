@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 function CheckIcon() {
   return (
@@ -11,7 +11,7 @@ function CheckIcon() {
 
 function TrashIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6" />
       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -21,38 +21,96 @@ function TrashIcon() {
   )
 }
 
+const SWIPE_REVEAL = 84
+const SWIPE_TRIGGER = 50
+
 function ItemRow({ item, onToggle, onDelete }) {
   const [removing, setRemoving] = useState(false)
+  const [offset, setOffset] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const startX = useRef(0)
+  const startY = useRef(0)
+  const lockedAxis = useRef(null)
 
-  async function handleDelete() {
+  function onTouchStart(e) {
+    const t = e.touches[0]
+    startX.current = t.clientX
+    startY.current = t.clientY
+    lockedAxis.current = null
+    setDragging(true)
+  }
+
+  function onTouchMove(e) {
+    const t = e.touches[0]
+    const dx = t.clientX - startX.current
+    const dy = t.clientY - startY.current
+
+    if (!lockedAxis.current) {
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+        lockedAxis.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+      } else return
+    }
+    if (lockedAxis.current !== 'x') return
+
+    const next = Math.min(0, Math.max(dx + (offset < 0 ? offset : 0), -120))
+    setOffset(next)
+  }
+
+  function onTouchEnd() {
+    setDragging(false)
+    if (lockedAxis.current === 'x') {
+      setOffset(offset < -SWIPE_TRIGGER ? -SWIPE_REVEAL : 0)
+    }
+  }
+
+  function handleDelete() {
     setRemoving(true)
     setTimeout(() => onDelete(item.id), 220)
   }
 
+  function handleToggle() {
+    if (offset !== 0) { setOffset(0); return }
+    onToggle(item.id, !item.checked)
+  }
+
   return (
-    <li
-      className={`item-row${item.checked ? ' is-checked' : ''}${removing ? ' is-removing' : ''}`}
-      style={{ animationDelay: `${Math.random() * 60}ms` }}
-    >
-      <label className="item-checkbox">
-        <input
-          type="checkbox"
-          checked={item.checked}
-          onChange={() => onToggle(item.id, !item.checked)}
-        />
-        <div className="item-checkbox-box">
-          {item.checked && <CheckIcon />}
-        </div>
-      </label>
-
-      <div className="item-body">
-        <span className="item-name">{item.name}</span>
-        <span className="item-qty">{item.quantity}</span>
-      </div>
-
-      <button className="btn-delete" onClick={handleDelete} aria-label="Remover">
+    <li className={`item-swipe-wrap${removing ? ' is-removing' : ''}${offset !== 0 ? ' is-swiped' : ''}`}>
+      <button
+        className="item-swipe-action"
+        onClick={handleDelete}
+        aria-label="Remover"
+        tabIndex={offset === 0 ? -1 : 0}
+        aria-hidden={offset === 0}
+      >
         <TrashIcon />
       </button>
+      <div
+        className={`item-row${item.checked ? ' is-checked' : ''}${dragging ? ' is-dragging' : ''}`}
+        style={{ transform: `translateX(${offset}px)` }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <label className="item-checkbox" onClick={(e) => { if (offset !== 0) { e.preventDefault(); setOffset(0) } }}>
+          <input
+            type="checkbox"
+            checked={item.checked}
+            onChange={handleToggle}
+          />
+          <div className="item-checkbox-box">
+            {item.checked && <CheckIcon />}
+          </div>
+        </label>
+
+        <div className="item-body">
+          <span className="item-name">{item.name}</span>
+          <span className="item-qty">{item.quantity}</span>
+        </div>
+
+        <button className="btn-delete" onClick={handleDelete} aria-label="Remover">
+          <TrashIcon />
+        </button>
+      </div>
     </li>
   )
 }
@@ -63,6 +121,7 @@ export default function ItemList({ items, onToggle, onDelete }) {
       <div className="empty-state">
         <div className="empty-state-icon">🧺</div>
         <p>Lista vazia por enquanto…</p>
+        <span className="empty-state-hint">Toque no + para adicionar</span>
       </div>
     )
   }
