@@ -15,10 +15,6 @@ export function useItems(month) {
       await fetchItems()
       if (cancelled) return
 
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.access_token
-      if (token) supabase.realtime.setAuth(token)
-
       channel = supabase
         .channel(`items:${month}`)
         .on(

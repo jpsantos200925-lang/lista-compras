@@ -16,3 +16,9 @@ create policy "Usuários autenticados têm acesso total"
   to authenticated
   using (true)
   with check (true);
+
+-- realtime: expor todas as colunas para que filtros por coluna não-PK funcionem
+alter table items replica identity full;
+
+-- adicionar à publicação do realtime
+alter publication supabase_realtime add table items;
