@@ -222,9 +222,19 @@ body::after {
 .app {
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 16px 80px;
+  padding: 0 16px;
   width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   animation: fadeIn .4s ease;
+}
+
+.items-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: max(80px, env(safe-area-inset-bottom));
 }
 
 /* ─── Header ─────────────────────────────────────────────────────── */
@@ -837,7 +847,7 @@ body::after {
 
 /* ─── Mobile tweaks ──────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .app { padding: 0 14px 100px; }
+  .app { padding: 0 14px; }
   .month-name { font-size: 2rem; }
   .item-row { padding: 14px 14px; }
   .item-name { font-size: 15px; }

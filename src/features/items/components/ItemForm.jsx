@@ -27,7 +27,7 @@ export default function ItemForm({ open, onClose, onAdd }) {
     await onAdd({ name: name.trim(), quantity: quantity.trim() || '1' })
     setName('')
     setQuantity('')
-    onClose()
+    setTimeout(() => nameRef.current?.focus(), 50)
   }
 
   if (!open) return null

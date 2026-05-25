@@ -1,25 +1,5 @@
 import { useState } from 'react'
-
-const MONTHS = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro',
-]
-
-function parseMonth(month) {
-  const [year, m] = month.split('-').map(Number)
-  return { year, m }
-}
-
-function formatMonth(month) {
-  const { year, m } = parseMonth(month)
-  return { name: MONTHS[m - 1], year }
-}
-
-function addMonths(month, delta) {
-  const { year, m } = parseMonth(month)
-  const d = new Date(year, m - 1 + delta, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
+import { formatMonth, addMonths } from '../utils/items.utils'
 
 export default function MonthSelector({ month, onChange, onCopy }) {
   const [copying, setCopying] = useState(false)

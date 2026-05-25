@@ -1,13 +1,7 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
-import { useItems } from '../hooks/useItems'
-import ItemForm from '../components/ItemForm'
-import ItemList from '../components/ItemList'
-import MonthSelector from '../components/MonthSelector'
-
-function currentMonth() {
-  return new Date().toISOString().slice(0, 7)
-}
+import { signOut } from '@/features/auth'
+import { useItems, ItemForm, ItemList, MonthSelector } from '@/features/items'
+import { currentMonth } from '@/features/items/utils/items.utils'
 
 export default function Home({ session }) {
   const [month, setMonth] = useState(currentMonth())
@@ -24,7 +18,7 @@ export default function Home({ session }) {
         <span className="app-header-brand">
           merca<span>dinho</span>
         </span>
-        <button className="btn-logout" onClick={() => supabase.auth.signOut()}>
+        <button className="btn-logout" onClick={signOut}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
@@ -49,13 +43,15 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {loading ? (
-        <div className="loading-dots">
-          <span /><span /><span />
-        </div>
-      ) : (
-        <ItemList items={items} onToggle={toggleItem} onDelete={deleteItem} />
-      )}
+      <div className="items-scroll">
+        {loading ? (
+          <div className="loading-dots">
+            <span /><span /><span />
+          </div>
+        ) : (
+          <ItemList items={items} onToggle={toggleItem} onDelete={deleteItem} />
+        )}
+      </div>
 
       <button className="fab" onClick={() => setFormOpen(true)} aria-label="Adicionar item">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
