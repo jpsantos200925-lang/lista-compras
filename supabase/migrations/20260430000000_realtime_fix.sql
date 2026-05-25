@@ -1,5 +1,13 @@
 -- expor todas as colunas para filtros por coluna não-PK no realtime (DELETE events)
 alter table items replica identity full;
 
--- garantir que a tabela está na publicação do realtime
-alter publication supabase_realtime add table items;
+-- adicionar à publicação somente se ainda não estiver
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'items'
+  ) then
+    alter publication supabase_realtime add table items;
+  end if;
+end $$;
