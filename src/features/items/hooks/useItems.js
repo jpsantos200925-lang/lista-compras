@@ -3,30 +3,36 @@ import {
   fetchItems,
   addItem,
   toggleItem,
-  deleteItem,
-  copyFromMonth,
+  removeItem,
+  copyItemsFromMonth,
   subscribeToItems,
   unsubscribeFromItems,
 } from '../services/items.service'
 
-export function useItems(month) {
+export function useItems(listId, month) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!month) return
+    if (!listId || !month) return
 
     let channel
     let cancelled = false
 
     ;(async () => {
       setLoading(true)
-      const data = await fetchItems(month)
-      if (cancelled) return
-      setItems(data)
-      setLoading(false)
+      try {
+        const data = await fetchItems(listId, month)
+        if (cancelled) return
+        setItems(data)
+      } catch (err) {
+        console.error('[useItems] fetchItems error', err)
+        if (!cancelled) setItems([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
 
-      channel = subscribeToItems(month, {
+      channel = subscribeToItems(listId, month, {
         onInsert: ({ new: item }) => setItems((prev) => {
           if (prev.find((i) => i.id === item.id)) return prev
           return [item, ...prev]
@@ -45,17 +51,17 @@ export function useItems(month) {
       cancelled = true
       if (channel) unsubscribeFromItems(channel)
     }
-  }, [month])
+  }, [listId, month])
 
   return {
     items,
     loading,
-    addItem: ({ name, quantity }) => addItem(month, name, quantity),
+    addItem: ({ name, quantity }) => addItem(listId, { name, quantity, month }),
     toggleItem,
     deleteItem: (id) => {
       setItems((prev) => prev.filter((i) => i.id !== id))
-      return deleteItem(id)
+      return removeItem(id)
     },
-    copyFromMonth: (sourceMonth) => copyFromMonth(month, sourceMonth),
+    copyFromMonth: (sourceMonth) => copyItemsFromMonth(listId, sourceMonth, month),
   }
 }

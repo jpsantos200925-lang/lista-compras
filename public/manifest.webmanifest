@@ -1,6 +1,6 @@
 {
-  "name": "Mercadinho",
-  "short_name": "Mercadinho",
+  "name": "Listou",
+  "short_name": "Listou",
   "description": "Lista de compras do lar",
   "start_url": "/",
   "scope": "/",

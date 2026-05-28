@@ -23,9 +23,13 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-logo">
-          <div className="login-logo-icon">🛒</div>
-          <h1>Mercadinho</h1>
-          <p>Lista de compras do lar</p>
+          <span className="brand-mark login-brand-mark">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <h1>Listou</h1>
+          <p>suas listas, do seu jeito</p>
         </div>
 
         <form className="login-form" onSubmit={handleLogin}>

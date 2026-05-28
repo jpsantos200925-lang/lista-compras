@@ -1,22 +1,42 @@
 import { useState } from 'react'
 import { signOut } from '@/features/auth'
-import { useItems, ItemForm, ItemList, MonthSelector } from '@/features/items'
-import { currentMonth } from '@/features/items/utils/items.utils'
+import { useLists, ListCard, ListForm } from '@/features/lists'
 
-export default function Home({ session }) {
-  const [month, setMonth] = useState(currentMonth())
+export default function Home() {
+  const { lists, loading, addList, editList, removeList } = useLists()
   const [formOpen, setFormOpen] = useState(false)
-  const { items, loading, addItem, toggleItem, deleteItem, copyFromMonth } = useItems(month)
+  const [editing, setEditing] = useState(null)
 
-  const checked = items.filter((i) => i.checked).length
-  const total = items.length
-  const pct = total > 0 ? Math.round((checked / total) * 100) : 0
+  const handleSave = async (form, logoFile) => {
+    if (editing) {
+      await editList(editing.id, form, logoFile)
+    } else {
+      await addList(form, logoFile)
+    }
+    setEditing(null)
+  }
+
+  const handleEdit = (list) => {
+    setEditing(list)
+    setFormOpen(true)
+  }
+
+  const handleDelete = async (list) => {
+    if (window.confirm(`Deletar a lista "${list.name}"? Todos os itens serão perdidos.`)) {
+      await removeList(list.id)
+    }
+  }
 
   return (
     <div className="app">
       <header className="app-header">
         <span className="app-header-brand">
-          merca<span>dinho</span>
+          <span className="brand-mark">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          Listou
         </span>
         <button className="btn-logout" onClick={signOut}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -28,39 +48,42 @@ export default function Home({ session }) {
         </button>
       </header>
 
-      <MonthSelector month={month} onChange={setMonth} onCopy={copyFromMonth} />
-
-      {total > 0 && (
-        <div className="progress-section">
-          <div className="progress-bar-wrap">
-            <div className="progress-bar-track">
-              <div className="progress-bar-fill" style={{ width: `${pct}%` }} />
-            </div>
-            <span className="progress-label">
-              <strong>{checked}</strong>/{total}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="items-scroll">
+      <main className="lists-grid">
         {loading ? (
-          <div className="loading-dots">
-            <span /><span /><span />
+          <div className="loading-dots"><span /><span /><span /></div>
+        ) : lists.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon-ring">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div className="empty-state-text">
+              <p className="empty-state-title">Nenhuma lista ainda</p>
+              <p className="empty-state-sub">Toque no botão abaixo para criar<br/>sua primeira lista personalizada.</p>
+            </div>
           </div>
         ) : (
-          <ItemList items={items} onToggle={toggleItem} onDelete={deleteItem} />
+          lists.map(list => (
+            <ListCard key={list.id} list={list} onEdit={handleEdit} onDelete={handleDelete} />
+          ))
         )}
-      </div>
+      </main>
 
-      <button className="fab" onClick={() => setFormOpen(true)} aria-label="Adicionar item">
+      <button className="fab" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', boxShadow: '0 8px 24px rgba(59,130,246,.32), 0 2px 6px rgba(0,0,0,.08)' }} onClick={() => { setEditing(null); setFormOpen(true) }} aria-label="Nova lista">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
       </button>
 
-      <ItemForm open={formOpen} onClose={() => setFormOpen(false)} onAdd={addItem} />
+      <ListForm
+        open={formOpen}
+        onClose={() => { setFormOpen(false); setEditing(null) }}
+        onSave={handleSave}
+        initial={editing}
+      />
     </div>
   )
 }

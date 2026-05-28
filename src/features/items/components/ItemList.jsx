@@ -115,11 +115,19 @@ function ItemRow({ item, onToggle, onDelete }) {
   )
 }
 
-export default function ItemList({ items, onToggle, onDelete }) {
+export default function ItemList({ items, onToggle, onDelete, list }) {
   if (!items.length) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">🧺</div>
+        <div className="empty-state-icon">
+          {list?.logo_url ? (
+            <img src={list.logo_url} alt={list.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
+          ) : list ? (
+            <span style={{ fontSize: '1.4rem', fontWeight: 700, color: list.primary_color }}>
+              {list.name.charAt(0).toUpperCase()}
+            </span>
+          ) : '🧺'}
+        </div>
         <p>Lista vazia por enquanto…</p>
         <span className="empty-state-hint">Toque no + para adicionar</span>
       </div>
